@@ -49,6 +49,69 @@ Semua fitur berikut punya jalur cadangan tanpa API key:
 perusahaan yang sama tidak menagih kuota. Saat kuota habis, sistem otomatis
 turun ke OpenStreetMap alih-alih berhenti.
 
+## Deploy ke internet / domain
+
+Di produksi server Node sekaligus menyajikan hasil build frontend, jadi cukup
+**satu layanan di satu port** — tidak perlu dua proses seperti saat pengembangan.
+
+```bash
+npm install
+npm run build
+npm run start:prod        # membaca PORT dari environment
+```
+
+### API key di hosting: pakai environment variable, jangan ditulis di kode
+
+Aplikasi membaca `SERPAPI_KEY` dari environment. File `server/.env` hanya alat
+bantu pengembangan lokal — **di hosting file itu tidak perlu ada sama sekali**.
+
+> ⚠️ **Jangan pernah commit API key ke repositori publik.** Repo publik dipindai
+> bot pencari kredensial secara terus-menerus, umumnya dalam hitungan menit
+> setelah commit. Akibatnya kuota Anda habis dipakai orang lain, dan GitHub
+> secret scanning sering otomatis melaporkannya sehingga kunci dicabut penyedia
+> — aplikasi Anda justru mati di domain. Menyimpan kunci sebagai environment
+> variable di panel hosting lebih aman *dan* lebih praktis: menggantinya tidak
+> perlu commit ulang.
+
+Variabel yang perlu diatur di panel hosting:
+
+| Variabel | Nilai | Wajib |
+|---|---|---|
+| `NODE_ENV` | `production` | ya |
+| `CONTACT_EMAIL` | email Anda (kebijakan Nominatim) | ya |
+| `SERPAPI_KEY` | kunci SerpAPI Anda | tidak (tanpa ini sistem memakai OpenStreetMap) |
+| `PORT` | biasanya diisi otomatis oleh hosting | tidak |
+| `SUPPLIER_SOURCE` | `auto` / `google` / `osm` | tidak |
+| `ANTHROPIC_API_KEY` | kunci Claude untuk penurunan BOM | tidak |
+
+### Cara mengatur di beberapa platform
+
+**Railway / Render / Fly.io** — buka Settings → Variables (atau Environment),
+tambahkan tiap variabel di atas. Build command `npm install && npm run build`,
+start command `npm run start:prod`.
+
+**VPS dengan systemd** — taruh di unit file, bukan di repo:
+
+```ini
+[Service]
+Environment=NODE_ENV=production
+Environment=CONTACT_EMAIL=email-anda@contoh.com
+Environment=SERPAPI_KEY=kunci-anda-di-sini
+ExecStart=/usr/bin/node /var/www/app/server/index.js
+```
+
+**cPanel / shared hosting Node** — menu "Setup Node.js App" punya bagian
+Environment Variables; isikan di sana.
+
+**Docker** — jangan tulis di `Dockerfile`. Pakai `docker run --env-file` atau
+`environment:` di `docker-compose.yml` yang tidak ikut di-commit.
+
+### Kalau kunci terlanjur bocor
+
+Rotate di dashboard SerpAPI, lalu perbarui environment variable di hosting.
+Menghapus commit saja tidak cukup — riwayat git dan cache GitHub tetap
+menyimpannya.
+
 ## Cara kerja singkat
 
 ```

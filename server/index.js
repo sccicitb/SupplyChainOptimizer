@@ -5,6 +5,7 @@
 // yang diwajibkan Nominatim tidak dapat diatur dari sisi browser. Server ini
 // menjadi perantaranya, sekaligus tempat rate limit dan cache ditegakkan.
 
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
@@ -142,6 +143,27 @@ app.post("/api/analyze/stream", async (req, res) => {
     res.end();
   }
 });
+
+// Di produksi, server ini sekaligus menyajikan hasil build frontend, sehingga
+// deployment cukup satu layanan di satu port — bukan dua proses terpisah
+// seperti saat pengembangan.
+if (process.env.NODE_ENV === "production") {
+  const distDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "dist");
+
+  if (fs.existsSync(distDir)) {
+    app.use(express.static(distDir));
+
+    // Aplikasi satu halaman: rute apa pun di luar /api dikembalikan ke index.html
+    // agar refresh di URL dalam tidak menghasilkan 404.
+    app.get(/^\/(?!api).*/, (req, res) => {
+      res.sendFile(path.join(distDir, "index.html"));
+    });
+
+    console.log(`  Menyajikan frontend dari ${distDir}`);
+  } else {
+    console.warn("  [peringatan] NODE_ENV=production tetapi folder dist/ tidak ada. Jalankan `npm run build` lebih dulu.");
+  }
+}
 
 app.listen(PORT, () => {
   console.log(`\n  Supply Chain Mapper API berjalan di http://localhost:${PORT}`);
