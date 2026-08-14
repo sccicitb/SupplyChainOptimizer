@@ -1,0 +1,23 @@
+# Dependensi
+node_modules/
+server/node_modules/
+
+# Hasil build
+dist/
+
+# Rahasia — JANGAN pernah di-commit.
+# server/.env berisi SERPAPI_KEY dan alamat kontak.
+.env
+.env.*
+!.env.example
+server/.env
+server/.env.*
+!server/.env.example
+
+# Cache runtime hasil pemanggilan API eksternal
+server/.cache/
+.cache/
+
+# Lain-lain
+*.log
+.DS_Store
