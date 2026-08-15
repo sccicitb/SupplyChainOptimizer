@@ -20,7 +20,7 @@ dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), ".
 import { analyzeSupplyChain, geocodeCompany } from "./lib/supplyChain.js";
 import { PRICE_MODEL_DISCLOSURE } from "./lib/priceModel.js";
 import { isAiAvailable } from "./lib/bomAi.js";
-import { isGoogleMapsAvailable } from "./lib/googleMaps.js";
+import { isGoogleMapsAvailable, geocodeViaGoogle } from "./lib/googleMaps.js";
 
 function supplierSourceLabel() {
   const mode = (process.env.SUPPLIER_SOURCE || "auto").toLowerCase();
@@ -66,24 +66,44 @@ app.get("/api/company/search", async (req, res) => {
   }
 
   try {
-    const results = await geocodeCompany(q, { limit: 6 });
+    const mode = (process.env.SUPPLIER_SOURCE || "auto").toLowerCase();
+    let results = [];
+    let source = null;
+
+    // Google Maps lebih dulu: ia mengembalikan kategori usaha yang sebenarnya
+    // ("Restoran seblak", "Produsen"), sedangkan Nominatim hanya memberi tag
+    // geometri OSM yang sering tidak menjelaskan jenis usahanya sama sekali.
+    if (isGoogleMapsAvailable() && mode !== "osm") {
+      results = await geocodeViaGoogle(q, { limit: 6 });
+      source = "Google Maps";
+    }
+
+    if (results.length === 0 && mode !== "google") {
+      results = await geocodeCompany(q, { limit: 6 });
+      source = "Nominatim (OpenStreetMap)";
+    }
+
     res.json({
       query: q,
       count: results.length,
-      source: "Nominatim (OpenStreetMap)",
+      source: source || "Nominatim (OpenStreetMap)",
       results: results.map((r) => ({
         name: r.name,
         displayName: r.displayName,
         lat: r.lat,
         lng: r.lng,
         city: r.city,
-        province: r.province,
+        province: r.province || null,
         category: r.category,
         type: r.type,
         website: r.website,
+        rating: r.rating ?? null,
+        reviews: r.reviews ?? null,
+        placeId: r.placeId || null,
         osmType: r.osmType,
         osmId: r.osmId,
-        osmUrl: r.osmUrl
+        osmUrl: r.osmUrl,
+        sourceLabel: r.sourceLabel || "OpenStreetMap"
       }))
     });
   } catch (err) {

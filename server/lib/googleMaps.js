@@ -126,6 +126,92 @@ function normalize(place, keywords) {
   };
 }
 
+/** Google mengembalikan `type` kadang sebagai string, kadang sebagai array. */
+function firstType(place) {
+  const raw = place.type ?? place.types;
+  if (Array.isArray(raw)) return raw[0] || null;
+  return raw || null;
+}
+
+/**
+ * Mencari perusahaan berdasarkan nama di Google Maps.
+ *
+ * Dipakai menggantikan geocoding Nominatim karena mengembalikan **kategori
+ * usaha yang sebenarnya** — "Restoran seblak", "Produsen", "Distributor Baja"
+ * — bukan sekadar tag geometri OSM seperti `building=yes`. Kategori itulah
+ * yang menentukan jenis rantai pasok yang relevan, dan tanpanya sebuah warung
+ * seblak bisa diperlakukan sebagai pabrik.
+ */
+export async function geocodeViaGoogle(query, { limit = 6 } = {}) {
+  if (!isGoogleMapsAvailable()) return [];
+
+  // Kotak pandang selebar Indonesia; nama perusahaan biasanya cukup khas
+  // sehingga tidak perlu dibatasi wilayah.
+  const ll = "@-2.5,118.0,5z";
+  const key = `serpapi:geocode:${query.toLowerCase().trim()}`;
+
+  let places;
+  try {
+    places = await cached(key, TTL.GEOCODE, async () => {
+      const url = buildUrl(ENDPOINT, {
+        engine: "google_maps",
+        type: "search",
+        q: query,
+        ll,
+        hl: "id",
+        gl: "id",
+        api_key: process.env.SERPAPI_KEY
+      });
+
+      const json = await fetchJson(url, { timeoutMs: 35000, retries: 0 });
+      if (json.error) throw new Error(json.error);
+
+      // Kueri yang sangat spesifik kadang langsung mengembalikan satu tempat.
+      if (json.place_results) return [json.place_results];
+      return json.local_results || [];
+    });
+  } catch (err) {
+    console.warn(`[google-maps] geocoding "${query}" gagal: ${err.message}`);
+    return [];
+  }
+
+  return places
+    .slice(0, limit)
+    .map((place) => {
+      const coords = place.gps_coordinates;
+      if (!coords) return null;
+
+      const type = firstType(place);
+
+      return {
+        name: place.title,
+        displayName: place.address ? `${place.title}, ${place.address}` : place.title,
+        lat: coords.latitude,
+        lng: coords.longitude,
+        city: (place.address || "").split(",").slice(-3, -2)[0]?.trim() || null,
+        province: null,
+
+        // Kategori usaha versi Google — inilah nilai tambah utamanya.
+        category: "google",
+        type,
+
+        website: place.website || null,
+        rating: place.rating || null,
+        reviews: place.reviews || 0,
+
+        placeId: place.place_id || null,
+        osmType: null,
+        osmId: null,
+        osmUrl: place.place_id
+          ? `https://www.google.com/maps/place/?q=place_id:${place.place_id}`
+          : null,
+        source: "google-maps-serpapi",
+        sourceLabel: "Google Maps"
+      };
+    })
+    .filter(Boolean);
+}
+
 /**
  * Mencari pemasok di Google Maps di sekitar sebuah titik.
  *

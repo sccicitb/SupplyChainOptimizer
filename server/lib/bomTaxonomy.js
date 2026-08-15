@@ -308,12 +308,14 @@ export const BUSINESS_MODEL_RULES = [
     // bukan pipa baja dan mikrokontroler.
     id: "kuliner",
     keywords: [
-      "bakso", "mie ayam", "mie", "soto", "sate", "nasi goreng", "gudeg", "pecel",
+      "bakso", "seblak", "mie ayam", "mie", "soto", "sate", "nasi goreng", "gudeg", "pecel",
+      "batagor", "siomay", "cilok", "martabak", "bubur", "lontong", "rendang", "geprek",
+      "penyetan", "nasi uduk", "gado-gado", "ketoprak", "rawon", "tongseng", "empal",
       "rumah makan", "warung", "warteg", "kedai", "restoran", "restaurant", "depot",
       "katering", "catering", "kafe", "cafe", "coffee", "kopi", "roti", "bakery",
       "kue", "es krim", "juice", "jus", "ayam goreng", "seafood", "masakan", "kuliner"
     ],
-    strong: ["bakso", "mie ayam", "soto", "sate", "gudeg", "pecel", "nasi goreng", "rumah makan", "warteg", "restoran", "restaurant", "katering", "catering", "bakery", "kedai", "depot", "ayam goreng"],
+    strong: ["bakso", "seblak", "mie ayam", "soto", "sate", "gudeg", "pecel", "nasi goreng", "batagor", "siomay", "cilok", "martabak", "rendang", "geprek", "gado-gado", "ketoprak", "rawon", "rumah makan", "warteg", "restoran", "restaurant", "katering", "catering", "bakery", "kedai", "depot", "ayam goreng"],
     industry: "Kuliner & Jasa Boga",
     productUnit: "porsi / hari operasional",
     bom: [
@@ -357,12 +359,35 @@ export const BUSINESS_MODEL_RULES = [
 // manufaktur ke apa pun yang dicari — sehingga pencarian "bakso" menghasilkan
 // daftar pemasok besi. Kategori entitas adalah bukti yang jauh lebih kuat
 // daripada teks profil, jadi ia diperiksa lebih dulu.
+// Pola dicocokkan terhadap dua bentuk sekaligus: tag OSM (`amenity=restaurant`)
+// dan label kategori Google berbahasa Indonesia ("Restoran seblak", "Produsen").
+// Google jauh lebih informatif — sebuah warung seblak yang di OSM hanya bertag
+// `building=yes` akan dikenali Google sebagai "Restoran seblak".
 export const NON_MANUFACTURING_CATEGORIES = [
-  { match: /^(amenity=(restaurant|cafe|fast_food|food_court|bar|pub|ice_cream)|shop=(bakery|butcher|deli|confectionery|greengrocer|coffee))$/i, ruleId: "kuliner" },
-  { match: /^amenity=(school|university|college|kindergarten)$/i, ruleId: null, label: "Institusi Pendidikan" },
-  { match: /^amenity=(hospital|clinic|doctors|pharmacy)$/i, ruleId: null, label: "Fasilitas Kesehatan" },
-  { match: /^amenity=(bank|police|fire_station|place_of_worship|townhall)$/i, ruleId: null, label: "Fasilitas Publik & Jasa" },
-  { match: /^tourism=(hotel|guest_house|hostel|motel)$/i, ruleId: null, label: "Akomodasi & Perhotelan" }
+  {
+    match: /amenity=(restaurant|cafe|fast_food|food_court|bar|pub|ice_cream)|shop=(bakery|butcher|deli|confectionery|greengrocer|coffee)|restoran|rumah makan|warung|kedai|kafe|\bcafe\b|toko roti|katering|jasa boga|kantin|depot makan|tempat makan|makanan cepat saji|kedai kopi|toko kue/i,
+    ruleId: "kuliner"
+  },
+  {
+    match: /amenity=(school|university|college|kindergarten)|sekolah|universitas|kampus|perguruan tinggi|taman kanak/i,
+    ruleId: null,
+    label: "Institusi Pendidikan"
+  },
+  {
+    match: /amenity=(hospital|clinic|doctors|pharmacy)|rumah sakit|klinik|puskesmas|apotek/i,
+    ruleId: null,
+    label: "Fasilitas Kesehatan"
+  },
+  {
+    match: /amenity=(bank|police|fire_station|place_of_worship|townhall)|\bbank\b|kantor polisi|pemadam kebakaran|masjid|gereja|kantor pemerintah/i,
+    ruleId: null,
+    label: "Fasilitas Publik & Jasa"
+  },
+  {
+    match: /tourism=(hotel|guest_house|hostel|motel)|\bhotel\b|penginapan|losmen|vila|resor/i,
+    ruleId: null,
+    label: "Akomodasi & Perhotelan"
+  }
 ];
 
 // Digunakan bila tidak ada aturan yang cocok. Ditandai `generic: true` supaya

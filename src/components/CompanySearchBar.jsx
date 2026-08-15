@@ -40,8 +40,8 @@ export default function CompanySearchBar({ selectedCompany, onSelectCompany, isW
 
       if (data.results.length === 0) {
         setError(
-          `"${term}" tidak ditemukan di OpenStreetMap. Sistem ini hanya memetakan perusahaan `
-          + "yang sudah terdaftar di OSM — coba nama resmi lengkapnya, atau nama kawasan industrinya."
+          `"${term}" tidak ditemukan. Coba nama resmi lengkapnya, atau tambahkan nama kotanya `
+          + '— misalnya "Nangkring Seblak Bandung".'
         );
       }
     } catch (err) {
@@ -56,10 +56,10 @@ export default function CompanySearchBar({ selectedCompany, onSelectCompany, isW
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Building2 className="w-5 h-5 text-cyan-400" />
-          <h2 className="text-base font-bold text-slate-100">Cari Perusahaan Manufaktur</h2>
+          <h2 className="text-base font-bold text-slate-100">Cari Perusahaan atau Usaha</h2>
         </div>
         <span className="text-xs text-slate-400">
-          Geocoding langsung ke OpenStreetMap — koordinat asli, bukan simulasi
+          Koordinat dan kategori usaha diambil langsung dari sumbernya, bukan simulasi
         </span>
       </div>
 
@@ -140,7 +140,16 @@ export default function CompanySearchBar({ selectedCompany, onSelectCompany, isW
                       <div className="font-mono text-[11px] text-cyan-400">
                         {r.lat.toFixed(4)}, {r.lng.toFixed(4)}
                       </div>
-                      <SourceBadge variant="osm" label={`${r.osmType}/${r.osmId}`} href={r.osmUrl} />
+                      <SourceBadge
+                        variant={r.placeId ? "google" : "osm"}
+                        label={r.placeId ? r.type || "Google Maps" : `${r.osmType}/${r.osmId}`}
+                        href={r.osmUrl}
+                      />
+                      {r.rating != null && (
+                        <div className="text-[10px] text-amber-300 font-semibold">
+                          ★ {r.rating} ({r.reviews})
+                        </div>
+                      )}
                       <div className="text-[10px] text-cyan-400 font-semibold flex items-center gap-1 justify-end">
                         Analisis rantai pasok <ArrowRight className="w-3 h-3" />
                       </div>
