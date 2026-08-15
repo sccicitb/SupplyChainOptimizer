@@ -274,8 +274,39 @@ export async function analyzeSupplyChain({ company, onProgress }) {
     ? "Menurunkan Bill of Materials dengan Claude dari teks hasil scraping"
     : "Menurunkan Bill of Materials dengan aturan taksonomi kata kunci");
 
+  // Kategori entitas hasil geocoding (mis. "amenity=restaurant") adalah bukti
+  // paling langsung tentang jenis usaha, jadi ikut disertakan.
+  const entityCategory = company.category && company.type
+    ? `${company.category}=${company.type}`
+    : company.category || "";
+
+  const rulesBom = deriveBomByRules(`${profile.rawText} ${company.name}`, entityCategory);
+
+  // Bila entitasnya jelas bukan usaha produksi, hentikan di sini. Menyodorkan
+  // daftar pemasok baja untuk sebuah sekolah atau rumah sakit lebih buruk
+  // daripada mengaku tidak berlaku.
+  if (rulesBom.notApplicable) {
+    report("bom", `${rulesBom.evidence} — analisis rantai pasok tidak berlaku untuk entitas ini`, "warn");
+    return {
+      company,
+      profile,
+      bom: {
+        industry: rulesBom.industry,
+        productUnit: null,
+        businessModel: profile.summary,
+        generic: true,
+        notApplicable: true,
+        method: rulesBom.method,
+        evidence: rulesBom.evidence,
+        runnerUp: null
+      },
+      components: [],
+      generatedAt: new Date().toISOString()
+    };
+  }
+
   const aiBom = await deriveBomWithAi(company.name, profile.rawText);
-  const bom = aiBom || deriveBomByRules(`${profile.rawText} ${company.name}`);
+  const bom = aiBom || rulesBom;
 
   report("bom", `Industri terdeteksi: ${bom.industry} — ${bom.components.length} komponen utama (metode: ${bom.method})`);
   if (bom.evidence) {
@@ -321,6 +352,7 @@ export async function analyzeSupplyChain({ company, onProgress }) {
       productUnit: bom.productUnit,
       businessModel: bom.businessModel || profile.summary,
       generic: bom.generic,
+      notApplicable: false,
       method: bom.method,
       evidence: bom.evidence || null,
       runnerUp: bom.runnerUp || null

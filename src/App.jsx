@@ -130,7 +130,24 @@ export default function App() {
           </div>
         )}
 
-        {analysis && (
+        {analysis?.bom?.notApplicable && (
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/40 space-y-2">
+            <div className="text-sm font-bold text-amber-200">
+              Analisis rantai pasok tidak berlaku untuk entitas ini
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              <strong>{company?.name}</strong> terdeteksi sebagai{" "}
+              <strong>{analysis.bom.industry}</strong>, bukan usaha yang memproduksi barang.
+              Sistem ini memetakan pemasok bahan baku, sehingga tidak ada rantai pasok
+              produksi yang bisa dipetakan di sini.
+            </p>
+            <p className="text-[11px] text-slate-400">
+              Dasar: {analysis.bom.evidence}
+            </p>
+          </div>
+        )}
+
+        {analysis && !analysis.bom.notApplicable && (
           <div className="glass-panel p-4 rounded-2xl border border-slate-800/90 flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="text-xs text-slate-500 uppercase tracking-wide">Model bisnis terdeteksi</div>
@@ -168,7 +185,7 @@ export default function App() {
 
         <SupplyChainMap company={company} selection={selection} />
 
-        {selection && <BomBreakdownTable selection={selection} />}
+        {selection && selection.results.length > 0 && <BomBreakdownTable selection={selection} />}
 
         <LiveScrapingConsole events={events} isWorking={isWorking} />
 

@@ -152,6 +152,48 @@ export const COMPONENT_LIBRARY = {
     priceBasis: "Acuan set kemasan karton bergelombang untuk produk besar"
   },
 
+  "bahan-pangan": {
+    name: "Bahan Baku Pangan",
+    category: "Pangan & Bahan Segar",
+    color: "#ef4444",
+    icon: "Box",
+    unit: "Kg",
+    keywords: ["daging", "sapi", "ayam", "sayur", "tepung", "beras", "bumbu", "sembako", "pangan", "grosir"],
+    searchTerms: ["daging", "sembako", "grosir"],
+    osmTags: [["shop", "butcher"], ["shop", "greengrocer"], ["shop", "wholesale"], ["amenity", "marketplace"], ["shop", "supermarket"]],
+    nameRegex: "daging|sapi|ayam|sayur|tepung|beras|sembako|grosir|pasar",
+    basePricePerUnit: 85000,
+    priceBasis: "Acuan campuran bahan baku pangan per kg (daging, tepung, bumbu), harga grosir"
+  },
+
+  "gas-energi": {
+    name: "Gas LPG & Energi Dapur",
+    category: "Energi & Utilitas",
+    color: "#f59e0b",
+    icon: "Cpu",
+    unit: "Tabung",
+    keywords: ["gas", "lpg", "elpiji", "tabung", "energi"],
+    searchTerms: ["gas lpg", "elpiji"],
+    osmTags: [["shop", "gas"], ["shop", "trade"], ["amenity", "fuel"]],
+    nameRegex: "gas|lpg|elpiji|tabung",
+    basePricePerUnit: 220000,
+    priceBasis: "Acuan tabung LPG 12 kg, harga agen resmi"
+  },
+
+  "peralatan-dapur": {
+    name: "Peralatan Dapur & Perlengkapan Saji",
+    category: "Peralatan Usaha",
+    color: "#06b6d4",
+    icon: "Disc",
+    unit: "Set",
+    keywords: ["peralatan", "dapur", "masak", "panci", "kompor", "etalase", "gerobak", "stainless"],
+    searchTerms: ["peralatan dapur", "kompor", "stainless"],
+    osmTags: [["shop", "houseware"], ["shop", "kitchen"], ["shop", "trade"], ["shop", "hardware"]],
+    nameRegex: "peralatan|dapur|masak|panci|kompor|etalase|gerobak|stainless|catering",
+    basePricePerUnit: 1450000,
+    priceBasis: "Acuan set peralatan dapur usaha (kompor, panci, etalase), harga distributor"
+  },
+
   "baterai-daya": {
     name: "Baterai & Sistem Daya",
     category: "Elektronika Daya",
@@ -181,6 +223,7 @@ export const BUSINESS_MODEL_RULES = [
   {
     id: "dirgantara",
     keywords: ["dirgantara", "pesawat terbang", "pesawat", "aerospace", "aircraft", "penerbangan", "aviasi", "helikopter", "avionik"],
+    strong: ["dirgantara", "pesawat terbang", "aerospace", "aircraft", "helikopter", "avionik"],
     industry: "Dirgantara & Kedirgantaraan",
     productUnit: "unit pesawat",
     bom: [
@@ -194,6 +237,7 @@ export const BUSINESS_MODEL_RULES = [
   {
     id: "alat-kesehatan",
     keywords: ["rumah sakit", "hospital", "medis", "medical", "alat kesehatan", "alkes", "ranjang", "tempat tidur", "hospital bed", "klinik"],
+    strong: ["rumah sakit", "hospital bed", "alat kesehatan", "alkes"],
     industry: "Alat Kesehatan & Manufaktur Medis",
     productUnit: "unit hospital bed",
     bom: [
@@ -207,6 +251,7 @@ export const BUSINESS_MODEL_RULES = [
   {
     id: "otomotif",
     keywords: ["otomotif", "automotive", "kendaraan bermotor", "karoseri", "mobil", "sepeda motor", "bus", "truk"],
+    strong: ["otomotif", "karoseri", "kendaraan bermotor"],
     industry: "Otomotif & Karoseri",
     productUnit: "unit kendaraan",
     bom: [
@@ -220,6 +265,7 @@ export const BUSINESS_MODEL_RULES = [
   {
     id: "sepeda",
     keywords: ["sepeda", "bicycle", "bike", "e-bike", "ebike", "gowes"],
+    strong: ["sepeda", "bicycle", "e-bike", "ebike"],
     industry: "Transportasi & Olahraga",
     productUnit: "unit sepeda",
     bom: [
@@ -233,6 +279,7 @@ export const BUSINESS_MODEL_RULES = [
   {
     id: "furnitur",
     keywords: ["furnitur", "furniture", "mebel", "meubel", "kursi", "meja", "lemari"],
+    strong: ["furnitur", "furniture", "mebel", "meubel"],
     industry: "Furnitur & Interior",
     productUnit: "unit furnitur",
     bom: [
@@ -256,19 +303,44 @@ export const BUSINESS_MODEL_RULES = [
     ]
   },
   {
-    id: "makanan-kemasan",
-    keywords: ["makanan", "minuman", "food", "beverage", "pangan", "snack", "kuliner"],
-    industry: "Makanan & Minuman",
+    // Usaha kuliner / jasa boga. Rantai pasoknya nyata, tetapi sama sekali
+    // bukan rantai pasok manufaktur: warung bakso membeli daging dan gas LPG,
+    // bukan pipa baja dan mikrokontroler.
+    id: "kuliner",
+    keywords: [
+      "bakso", "mie ayam", "mie", "soto", "sate", "nasi goreng", "gudeg", "pecel",
+      "rumah makan", "warung", "warteg", "kedai", "restoran", "restaurant", "depot",
+      "katering", "catering", "kafe", "cafe", "coffee", "kopi", "roti", "bakery",
+      "kue", "es krim", "juice", "jus", "ayam goreng", "seafood", "masakan", "kuliner"
+    ],
+    strong: ["bakso", "mie ayam", "soto", "sate", "gudeg", "pecel", "nasi goreng", "rumah makan", "warteg", "restoran", "restaurant", "katering", "catering", "bakery", "kedai", "depot", "ayam goreng"],
+    industry: "Kuliner & Jasa Boga",
+    productUnit: "porsi / hari operasional",
+    bom: [
+      { component: "bahan-pangan", qty: 25, spec: "Bahan baku utama harian: daging, mie, sayur, tepung, dan bumbu" },
+      { component: "gas-energi", qty: 2, spec: "Gas LPG untuk memasak" },
+      { component: "kemasan", qty: 100, spec: "Kemasan bawa pulang, mangkuk, dan kantong" },
+      { component: "peralatan-dapur", qty: 1, spec: "Peralatan masak, etalase, dan perlengkapan saji" }
+    ]
+  },
+  {
+    // Pabrik pengolahan makanan — berbeda dari usaha kuliner di atas.
+    id: "makanan-olahan",
+    keywords: ["pabrik makanan", "industri makanan", "makanan olahan", "food manufacturing", "food industry", "minuman kemasan", "pangan olahan", "snack", "biskuit", "mi instan"],
+    strong: ["pabrik makanan", "industri makanan", "food manufacturing", "mi instan", "biskuit"],
+    industry: "Industri Makanan & Minuman",
     productUnit: "batch produksi",
     bom: [
-      { component: "kemasan", qty: 100, spec: "Kemasan primer dan sekunder produk" },
-      { component: "plastik-injeksi", qty: 50, spec: "Wadah dan tutup plastik food grade" },
-      { component: "baja-struktur", qty: 4, spec: "Peralatan dan rak produksi stainless" }
+      { component: "bahan-pangan", qty: 500, spec: "Bahan baku pangan skala industri" },
+      { component: "kemasan", qty: 1000, spec: "Kemasan primer dan sekunder produk" },
+      { component: "plastik-injeksi", qty: 200, spec: "Wadah dan tutup plastik food grade" },
+      { component: "baja-struktur", qty: 15, spec: "Peralatan dan rak produksi stainless" }
     ]
   },
   {
     id: "tekstil-garmen",
     keywords: ["tekstil", "garmen", "garment", "pakaian", "konveksi", "kain", "sepatu", "alas kaki"],
+    strong: ["tekstil", "garmen", "garment", "konveksi", "alas kaki"],
     industry: "Tekstil & Garmen",
     productUnit: "lot produksi",
     bom: [
@@ -278,6 +350,19 @@ export const BUSINESS_MODEL_RULES = [
       { component: "kemasan", qty: 20, spec: "Kemasan dan label produk" }
     ]
   }
+];
+
+// Kategori entitas dari Nominatim/Google yang menandakan usaha ini BUKAN
+// pabrik. Sistem sebelumnya mengabaikan sinyal ini dan memaksakan BOM
+// manufaktur ke apa pun yang dicari — sehingga pencarian "bakso" menghasilkan
+// daftar pemasok besi. Kategori entitas adalah bukti yang jauh lebih kuat
+// daripada teks profil, jadi ia diperiksa lebih dulu.
+export const NON_MANUFACTURING_CATEGORIES = [
+  { match: /^(amenity=(restaurant|cafe|fast_food|food_court|bar|pub|ice_cream)|shop=(bakery|butcher|deli|confectionery|greengrocer|coffee))$/i, ruleId: "kuliner" },
+  { match: /^amenity=(school|university|college|kindergarten)$/i, ruleId: null, label: "Institusi Pendidikan" },
+  { match: /^amenity=(hospital|clinic|doctors|pharmacy)$/i, ruleId: null, label: "Fasilitas Kesehatan" },
+  { match: /^amenity=(bank|police|fire_station|place_of_worship|townhall)$/i, ruleId: null, label: "Fasilitas Publik & Jasa" },
+  { match: /^tourism=(hotel|guest_house|hostel|motel)$/i, ruleId: null, label: "Akomodasi & Perhotelan" }
 ];
 
 // Digunakan bila tidak ada aturan yang cocok. Ditandai `generic: true` supaya
@@ -317,12 +402,18 @@ function countOccurrences(text, phrase) {
 export function scoreRule(rule, text) {
   let score = 0;
   const matched = [];
+  const strong = new Set(rule.strong || []);
 
   for (const keyword of rule.keywords) {
     const count = countOccurrences(text, keyword);
     if (count > 0) {
+      // Sebagian kata kunci nyaris tidak mungkin bermakna lain: "bakso" hanya
+      // muncul pada usaha kuliner, "dirgantara" hanya pada industri pesawat.
+      // Satu kemunculan saja sudah cukup menjadi bukti, sehingga nama pendek
+      // seperti "Bakso Malang" tidak jatuh ke kategori manufaktur umum.
+      const weight = strong.has(keyword) ? 3 : 1;
       matched.push(`${keyword} (${count}x)`);
-      score += Math.min(count, 3);
+      score += Math.min(count, 3) * weight;
     }
   }
 
@@ -340,14 +431,50 @@ export function scoreRule(rule, text) {
  * "aturan pertama yang cocok menang", yang membuat satu kata sambil lalu bisa
  * mengalahkan bukti yang jauh lebih kuat.
  */
-export function deriveBomByRules(businessModelText = "") {
+export function deriveBomByRules(businessModelText = "", entityCategory = "") {
   const text = businessModelText.toLowerCase();
+
+  // Langkah 1 — kategori entitas lebih dulu. Tag OSM `amenity=restaurant` atau
+  // kategori Google "Rumah Makan" adalah pernyataan langsung tentang jenis
+  // usahanya, jauh lebih andal daripada menebak dari teks profil.
+  const categoryHit = entityCategory
+    ? NON_MANUFACTURING_CATEGORIES.find((c) => c.match.test(entityCategory))
+    : null;
+
+  if (categoryHit && !categoryHit.ruleId) {
+    // Bukan usaha produksi sama sekali, dan tidak ada BOM yang masuk akal.
+    // Lebih baik mengatakannya terus terang daripada menyodorkan daftar
+    // pemasok baja untuk sebuah sekolah atau rumah sakit.
+    return {
+      industry: categoryHit.label,
+      productUnit: null,
+      generic: true,
+      notApplicable: true,
+      method: "kategori entitas",
+      evidence: `Kategori entitas "${entityCategory}" menunjukkan ini bukan usaha produksi`,
+      runnerUp: null,
+      components: []
+    };
+  }
 
   const scored = BUSINESS_MODEL_RULES
     .map((rule) => ({ rule, ...scoreRule(rule, text) }))
     .sort((a, b) => b.score - a.score);
 
-  const best = scored[0];
+  let best = scored[0];
+  let categoryOverride = null;
+
+  // Kategori entitas yang jelas mengalahkan skor teks: pencarian "Bakso Pak
+  // Kumis" pada entitas `amenity=restaurant` adalah usaha kuliner, apa pun
+  // isi teks profilnya.
+  if (categoryHit?.ruleId) {
+    const forced = BUSINESS_MODEL_RULES.find((r) => r.id === categoryHit.ruleId);
+    if (forced) {
+      categoryOverride = entityCategory;
+      best = { rule: forced, score: Math.max(best?.score || 0, MIN_EVIDENCE_SCORE), matched: [`kategori entitas ${entityCategory}`] };
+    }
+  }
+
   const useGeneric = !best || best.score < MIN_EVIDENCE_SCORE;
   const rule = useGeneric ? GENERIC_BOM : best.rule;
 
@@ -355,12 +482,15 @@ export function deriveBomByRules(businessModelText = "") {
     industry: rule.industry,
     productUnit: rule.productUnit,
     generic: Boolean(rule.generic) || useGeneric,
-    method: "aturan-taksonomi",
+    notApplicable: false,
+    method: categoryOverride ? "kategori entitas + taksonomi" : "aturan-taksonomi",
     // Bukti yang mendasari keputusan, supaya klasifikasi bisa diaudit dan
     // tidak sekadar muncul begitu saja.
     evidence: useGeneric
       ? `Bukti terkuat (${best?.rule.industry || "tidak ada"}, skor ${best?.score || 0}) di bawah ambang ${MIN_EVIDENCE_SCORE}`
-      : `${best.matched.slice(0, 5).join(", ")} — skor ${best.score}`,
+      : categoryOverride
+        ? `Kategori entitas "${categoryOverride}" menentukan jenis usaha`
+        : `${best.matched.slice(0, 5).join(", ")} — skor ${best.score}`,
     runnerUp: !useGeneric && scored[1]?.score > 0
       ? `${scored[1].rule.industry} (skor ${scored[1].score})`
       : null,
@@ -383,7 +513,10 @@ export const GOOGLE_QUERIES = {
   "kayu-furnitur": "supplier kayu plywood",
   "cat-kimia": "distributor cat industri",
   "kemasan": "pabrik kemasan karton",
-  "baterai-daya": "distributor baterai dan motor listrik"
+  "baterai-daya": "distributor baterai dan motor listrik",
+  "bahan-pangan": "grosir sembako dan bahan makanan",
+  "gas-energi": "agen gas lpg elpiji",
+  "peralatan-dapur": "toko peralatan dapur dan stainless"
 };
 
 /** Menggabungkan entri BOM dengan definisi lengkap komponennya. */
